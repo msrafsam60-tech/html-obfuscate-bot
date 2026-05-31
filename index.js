@@ -7,6 +7,9 @@ const minify = require("html-minifier-terser").minify;
 // ⚠️ TOKEN Railway থেকে আসবে
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
+// 🔐 Start message
+bot.start((ctx) => ctx.reply("🤖 Bot is running... Send HTML file"));
+
 // 🔐 HTML obfuscation function
 async function obfuscate(html) {
   let clean = await minify(html, {
@@ -31,10 +34,13 @@ document.write(atob("${base64}"));
 // 📁 File receive handler + loading system
 bot.on("document", async (ctx) => {
   try {
-    // ⏳ loading message
-    await ctx.reply("⏳ আপনার ফাইল প্রসেস করা হচ্ছে... অনুগ্রহ করে 10 সেকেন্ড অপেক্ষা করুন
- ফাইলটি ইনক্রিপ্ট মারা হচ্ছে
- এবং RAFSAN TEAM এর সাথে থাকুন ধন্যবাদ.!✅");
+    // ⏳ Loading message (FIXED multiline)
+    await ctx.reply(
+`⏳ আপনার ফাইল প্রসেস করা হচ্ছে...
+📁 ফাইলটি ইনক্রিপ্ট করা হচ্ছে...
+⏳ অনুগ্রহ করে 10 সেকেন্ড অপেক্ষা করুন
+✅ RAFSAN TEAM এর সাথে থাকার জন্য ধন্যবাদ!`
+    );
 
     const fileLink = await ctx.telegram.getFileLink(
       ctx.message.document.file_id
