@@ -28,9 +28,14 @@ document.write(atob("${base64}"));
   `;
 }
 
-// 📁 File receive handler
+// 📁 File receive handler + loading system
 bot.on("document", async (ctx) => {
   try {
+    // ⏳ loading message
+    await ctx.reply("⏳ আপনার ফাইল প্রসেস করা হচ্ছে... অনুগ্রহ করে 10 সেকেন্ড অপেক্ষা করুন
+ ফাইলটি ইনক্রিপ্ট মারা হচ্ছে
+ এবং RAFSAN TEAM এর সাথে থাকুন ধন্যবাদ.!✅");
+
     const fileLink = await ctx.telegram.getFileLink(
       ctx.message.document.file_id
     );
@@ -43,11 +48,14 @@ bot.on("document", async (ctx) => {
     const filePath = path.join(__dirname, "output.html");
     await fs.writeFile(filePath, output);
 
+    // ⏳ delay effect
+    await new Promise(r => setTimeout(r, 10000));
+
     await ctx.replyWithDocument({ source: filePath });
 
   } catch (err) {
     console.log(err);
-    ctx.reply("Error processing file");
+    ctx.reply("❌ Error processing file");
   }
 });
 
